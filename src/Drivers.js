@@ -7,46 +7,10 @@ export default function Drivers(){
   const [sumPoints, setSumPoints] = useState(-1);
   const [pointsRemainingForSecond, setPointsRemainingForSecond] = useState(-1)
   const [mostRecentRound, setMostRecentRound] = useState(-1);
+  const [racesLeft, setRacesLeft] = useState(-1)
+  const [sprintsLeft, setSprintsLeft] = useState(-1)
 
   const [winningAbilityCalculated, setWinningAbilityCalculated] = useState(false)
-
-  function xmlToJson(xml) {
-	
-    // Create the return object
-    var obj = {};
-  
-    if (xml.nodeType == 1) { // element
-      // do attributes
-      if (xml.attributes.length > 0) {
-      obj["@attributes"] = {};
-        for (var j = 0; j < xml.attributes.length; j++) {
-          var attribute = xml.attributes.item(j);
-          obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
-        }
-      }
-    } else if (xml.nodeType == 3) { // text
-      obj = xml.nodeValue;
-    }
-  
-    // do children
-    if (xml.hasChildNodes()) {
-      for(var i = 0; i < xml.childNodes.length; i++) {
-        var item = xml.childNodes.item(i);
-        var nodeName = item.nodeName;
-        if (typeof(obj[nodeName]) == "undefined") {
-          obj[nodeName] = xmlToJson(item);
-        } else {
-          if (typeof(obj[nodeName].push) == "undefined") {
-            var old = obj[nodeName];
-            obj[nodeName] = [];
-            obj[nodeName].push(old);
-          }
-          obj[nodeName].push(xmlToJson(item));
-        }
-      }
-    }
-    return obj;
-  };
   
   class DriverPoints{
     name = ""
@@ -63,23 +27,18 @@ export default function Drivers(){
     }
   }
   
-  function saveDrivers(json){
-    var x = [];
-    for (var i = 0; i < json.length; i++){
-      var driver = json[i]
-      x.push(new DriverPoints(driver.Driver.GivenName["#text"] + " " + driver.Driver.FamilyName["#text"], parseInt(driver["@attributes"].points)))
-    }
-    setDriverList(x);
-  }
-  
   function getData(){
     fetch ("http://ergast.com/api/f1/current/driverStandings")
     .then(response => response.text())
-    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-    .then(data => {
-      var json = xmlToJson(data)
-      json = json.MRData.StandingsTable.StandingsList.DriverStanding
-      saveDrivers(json)
+    .then(text => new window.DOMParser().parseFromString(text, "text/xml"))
+    .then(xml => {
+      var tmpDrivers = [];
+      $(xml).find("DriverStanding").each((_, driver) => {
+        var driverInfo = $(driver).find("Driver")
+        driver = $(driver)
+        tmpDrivers.push(new DriverPoints(driverInfo.find("GivenName").text() + " " + driverInfo.find("FamilyName").text(), driver.attr("points")))
+      })
+      setDriverList(tmpDrivers);
     })
   }
 
@@ -103,14 +62,18 @@ export default function Drivers(){
 
       var totalPointsRemaining = 0;
       var totalPointsRemainingForSecond = 0;
-      var sumPointsCalculated = 0
+      var sumPointsCalculated = 0;
+      var races = 0;
+      var sprints = 0;
       $(data).find("Race").each((index, element) => {
         if (parseInt($(element).attr("round")) > mostRecentRound){
           totalPointsRemaining += 26;
           totalPointsRemainingForSecond += 18
+          races++;
           sumPointsCalculated += pointsPerRace
           if ($(element).find("Sprint").length > 0){
             totalPointsRemaining += 8;
+            sprints++;
             totalPointsRemainingForSecond += 7
             sumPointsCalculated += pointsPerSprint;
           }
@@ -119,35 +82,13 @@ export default function Drivers(){
       setSumPoints(sumPointsCalculated)
       setPointsRemaining(totalPointsRemaining);
       setPointsRemainingForSecond(totalPointsRemainingForSecond);
+      setRacesLeft(races)
+      setSprintsLeft(sprints)
     })
   }
 
-  function calculateWinningAbility(){
-    var firstPlaceDriver = driverList[0]
-    var secondPlaceDriver = driverList[1]
-    var maxSecondPlacePoints = secondPlaceDriver.points + pointsRemaining;
-    firstPlaceDriver.pointsToWin = maxSecondPlacePoints + 1 - firstPlaceDriver.points;
-
-    var firstPlacePoints = firstPlaceDriver.points;
-    for (var driver of driverList){
-      if (driver.points + pointsRemaining < firstPlacePoints){
-        driver.canWin = false
-      }
-      else{
-        driver.canWin = true;
-      }
-    }
-
-    for (var driver of driverList){
-      if (driver.points + pointsRemaining > firstPlacePoints + pointsRemainingForSecond){
-        driver.canWinByThemselves = true
-      }
-      else{
-        driver.canWinByThemselves = false;
-      }
-    }
-
-    // getting a drivers highest possible position
+  // getting a drivers highest possible position
+  function highestPossiblePosition(){
     for (var driver of driverList){
       
       var tmpDriverPoints = JSON.parse(JSON.stringify(driverList))
@@ -174,35 +115,109 @@ export default function Drivers(){
         currentIndex++;
         if (tmpDriver.name == driver.name){
           driver.highestPossible = currentIndex;
+          if (driver.highestPossible == 1){
+            driver.canWin = true;
+          }
           break;
         }
       }      
     }
+  }
 
-    // getting a drivers lowest possible position
-    for (var driver of driverList){
-      
-      var tmpDriverPoints = JSON.parse(JSON.stringify(driverList))
-      var pointsPool = sumPoints;
+  function roundUpToNearestPoints(number, pointsSet){
+    while (!pointsSet.has(number) && number < 25){
+      number++;
+    }
+    if (number >= 25){
+      return Math.max(...pointsSet)
+    }
+    return number;
+  }
 
-      var currDriverPoints = tmpDriverPoints.find(x => x.name == driver.name).points;
-      while(pointsPool > 0){
-        if (tmpDriverPoints.find(x => x.points <= currDriverPoints && x.name != driver.name))
+  // getting a drivers lowest possible position
+  function lowestPossiblePosition(driver){
+    
+    var tmpDriverPoints = JSON.parse(JSON.stringify(driverList))
+    var currDriverPoints = tmpDriverPoints.find(x => x.name == driver.name).points;
+
+    var racePointsSet = new Set([25,18,15,12,10,8,6,4,2,1]);
+    var sprintPointsSet = new Set([8,7,6,5,4,3,2,1])
+    // var totalPointsSet = new Array(racesLeft).fill(racePointsSet).concat(new Array(sprintsLeft).fill(sprintPointsSet));
+    var totalPointsSet = [];
+    for (var i = 0; i < racesLeft; i++){
+      totalPointsSet.push(new Set([25,18,15,12,10,8,6,4,2,1]))
+    }
+    for (var i = 0; i < sprintsLeft; i++){
+      totalPointsSet.push(new Set([8,7,6,5,4,3,2,1]))
+    }
+    var driversAssigned = new Set();
+
+    // continue until there are no more points to be given out
+    while(totalPointsSet.length > 0){
+      var currentRacePoints = totalPointsSet.pop();
+      driversAssigned.clear()
+      driversAssigned.add(driver.name)
+
+      // for the current race, distribute the points
+      while (currentRacePoints.size > 0){
+        if (tmpDriverPoints.find(x => x.points <= currDriverPoints && !driversAssigned.has(x.name)))
         {
-          tmpDriverPoints.find(x => x.points <= currDriverPoints && x.name != driver.name).points += 1;
+          var driverToIncrease = tmpDriverPoints.find(x => x.points <= currDriverPoints && !driversAssigned.has(x.name))
+          var pointsToAssign = roundUpToNearestPoints(currDriverPoints - driverToIncrease.points, currentRacePoints)
+          driverToIncrease.points += pointsToAssign;
+          currentRacePoints.delete(pointsToAssign)
+          driversAssigned.add(driverToIncrease.name)
         }
-        pointsPool -= 1
+        else{
+          if (!tmpDriverPoints.find(x => x.points < currDriverPoints)){
+            driver.lowestPossible = driverList.length
+            return
+          }
+          else{
+            var pointsToAssign = roundUpToNearestPoints(25, currentRacePoints)
+            var driverToAssign = tmpDriverPoints.find(x => !driversAssigned.has(x.name))
+            currentRacePoints.delete(pointsToAssign)
+            driverToAssign.points += pointsToAssign;
+            driversAssigned.add(driverToAssign.name)
+          }
+        }
       }
+    }
 
-      tmpDriverPoints = tmpDriverPoints.sort((a,b) => b.points - a.points)
-      var currentIndex = 0;
-      for (var tmpDriver of tmpDriverPoints){
-        currentIndex++;
-        if (tmpDriver.name == driver.name){
-          driver.lowestPossible = currentIndex;
-          break;
-        }
-      }      
+    tmpDriverPoints = tmpDriverPoints.sort((a,b) => b.points - a.points)
+    var currentIndex = 0;
+    for (var tmpDriver of tmpDriverPoints){
+      currentIndex++;
+      if (tmpDriver.name == driver.name){
+        driver.lowestPossible = currentIndex;
+        break;
+      }
+    }
+  }
+
+  function calculateWinningAbility(){
+    
+    // we want to calculate the lowest possible position for each driver
+    for (var driver of driverList){
+      highestPossiblePosition(driver)
+      lowestPossiblePosition(driver)
+    }
+
+    // points for the first place driver to secure championship
+    var firstPlaceDriver = driverList[0]
+    var secondPlaceDriver = driverList[1]
+    var maxSecondPlacePoints = secondPlaceDriver.points + pointsRemaining;
+    firstPlaceDriver.pointsToWin = maxSecondPlacePoints + 1 - firstPlaceDriver.points;
+    
+    // if a driver can win on pure performance
+    var firstPlacePoints = driverList[0].points;
+    for (var driver of driverList){
+      if (driver.points + pointsRemaining > firstPlacePoints + pointsRemainingForSecond){
+        driver.canWinByThemselves = true
+      }
+      else{
+        driver.canWinByThemselves = false;
+      }
     }
 
     setWinningAbilityCalculated(true)
