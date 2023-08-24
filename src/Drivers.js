@@ -4,7 +4,6 @@ import $ from 'jquery';
 export default function Drivers(){
   const [driverList, setDriverList] = useState([]);
   const [pointsRemaining, setPointsRemaining] = useState(-1);
-  const [sumPoints, setSumPoints] = useState(-1);
   const [pointsRemainingForSecond, setPointsRemainingForSecond] = useState(-1)
   const [mostRecentRound, setMostRecentRound] = useState(-1);
   const [racesLeft, setRacesLeft] = useState(-1)
@@ -16,7 +15,6 @@ export default function Drivers(){
     name = ""
     points = -1
     pointsToWin = 0
-    canWin = false
     canWinByThemselves = false
     highestPossible = -1
     lowestPossible = -1
@@ -62,7 +60,6 @@ export default function Drivers(){
 
       var totalPointsRemaining = 0;
       var totalPointsRemainingForSecond = 0;
-      var sumPointsCalculated = 0;
       var races = 0;
       var sprints = 0;
       $(data).find("Race").each((index, element) => {
@@ -70,16 +67,13 @@ export default function Drivers(){
           totalPointsRemaining += 26;
           totalPointsRemainingForSecond += 18
           races++;
-          sumPointsCalculated += pointsPerRace
           if ($(element).find("Sprint").length > 0){
             totalPointsRemaining += 8;
             sprints++;
             totalPointsRemainingForSecond += 7
-            sumPointsCalculated += pointsPerSprint;
           }
         }
       })
-      setSumPoints(sumPointsCalculated)
       setPointsRemaining(totalPointsRemaining);
       setPointsRemainingForSecond(totalPointsRemainingForSecond);
       setRacesLeft(races)
@@ -88,60 +82,95 @@ export default function Drivers(){
   }
 
   // getting a drivers highest possible position
-  function highestPossiblePosition(){
-    for (var driver of driverList){
-      
-      var tmpDriverPoints = JSON.parse(JSON.stringify(driverList))
-      var pointsPool = sumPoints;
-      
-      tmpDriverPoints.find(x => x.name == driver.name).points += pointsRemaining;
-      pointsPool -= pointsRemaining;
+  function highestPossiblePosition(driver){
 
-      var currDriverPoints = tmpDriverPoints.find(x => x.name == driver.name).points;
-      while(pointsPool > 0){
-        if (tmpDriverPoints.find(x => x.points + 1 < currDriverPoints || x.points > currDriverPoints))
+    function getPointsToAssign(number, pointsSet){
+      while (!pointsSet.has(number) && number > 0){
+        number--;
+      }
+      if (number <= 0){
+        return Math.max(...pointsSet)
+      }
+      return number;
+    }
+    
+    var tmpDriverPoints = JSON.parse(JSON.stringify(driverList))
+    
+    // var totalPointsSet = new Array(racesLeft).fill(racePointsSet).concat(new Array(sprintsLeft).fill(sprintPointsSet));
+    var totalPointsSet = [];
+    for (var i = 0; i < racesLeft; i++){
+      totalPointsSet.push(new Set([25,18,15,12,10,8,6,4,2,1]))
+    }
+    for (var i = 0; i < sprintsLeft; i++){
+      totalPointsSet.push(new Set([8,7,6,5,4,3,2,1]))
+    }
+    var driversAssigned = new Set();
+
+    // assigning the current driver the maximum points from each race
+    for (var pointsSet of totalPointsSet){
+      var maxPoints = Math.max(...pointsSet)
+      pointsSet.delete(maxPoints)
+      tmpDriverPoints.find(x => x.name == driver.name).points += maxPoints
+    }
+    
+    // continue until there are no more points to be given out
+    var currDriverPoints = tmpDriverPoints.find(x => x.name == driver.name).points;
+
+    while(totalPointsSet.length > 0){
+      var currentRacePoints = totalPointsSet.pop();
+      driversAssigned.clear()
+      driversAssigned.add(driver.name)
+
+      // for the current race, distribute the points
+      while (currentRacePoints.size > 0){
+        if (tmpDriverPoints.find(x => x.points >= currDriverPoints && !driversAssigned.has(x.name)))
         {
-          tmpDriverPoints.find(x => x.points + 1 < currDriverPoints || x.points > currDriverPoints).points += 1;
+          var driverToIncrease = tmpDriverPoints.find(x => x.points >= currDriverPoints && !driversAssigned.has(x.name))
+          var pointsToAssign = getPointsToAssign(currDriverPoints - driverToIncrease.points, currentRacePoints)
+          driverToIncrease.points += pointsToAssign;
+          currentRacePoints.delete(pointsToAssign)
+          driversAssigned.add(driverToIncrease.name)
         }
         else{
-          tmpDriverPoints.find(x => x.points == currDriverPoints || x.points == currDriverPoints - 1).points += 1;
+          // sort so that the lowest scoring driver is first
+          tmpDriverPoints.sort((a,b) => a.points - b.points)
+          var driverToAssign = tmpDriverPoints.find(x => !driversAssigned.has(x.name))
+          var pointsToAssign = getPointsToAssign(currDriverPoints - driverToAssign.points, currentRacePoints)
+          currentRacePoints.delete(pointsToAssign)
+          driverToAssign.points += pointsToAssign;
+          driversAssigned.add(driverToAssign.name)
         }
-        pointsPool -= 1
       }
+    }
 
-      tmpDriverPoints = tmpDriverPoints.sort((a,b) => b.points- a.points)
-      var currentIndex = 0;
-      for (var tmpDriver of tmpDriverPoints){
-        currentIndex++;
-        if (tmpDriver.name == driver.name){
-          driver.highestPossible = currentIndex;
-          if (driver.highestPossible == 1){
-            driver.canWin = true;
-          }
-          break;
-        }
-      }      
+    tmpDriverPoints.sort((a,b) => b.points - a.points)
+    var currentIndex = 0;
+    for (var tmpDriver of tmpDriverPoints){
+      currentIndex++;
+      if (tmpDriver.name == driver.name){
+        driver.highestPossible = currentIndex;
+        break;
+      }
     }
-  }
-
-  function roundUpToNearestPoints(number, pointsSet){
-    while (!pointsSet.has(number) && number < 25){
-      number++;
-    }
-    if (number >= 25){
-      return Math.max(...pointsSet)
-    }
-    return number;
   }
 
   // getting a drivers lowest possible position
   function lowestPossiblePosition(driver){
+
+    function getPointsToAssign(pointsDiff, pointsSet){
+      var number = pointsDiff + 1;
+      while (!pointsSet.has(number) && number < 25){
+        number++;
+      }
+      if (number >= 25){
+        return Math.max(...pointsSet)
+      }
+      return number;
+    }
     
     var tmpDriverPoints = JSON.parse(JSON.stringify(driverList))
     var currDriverPoints = tmpDriverPoints.find(x => x.name == driver.name).points;
 
-    var racePointsSet = new Set([25,18,15,12,10,8,6,4,2,1]);
-    var sprintPointsSet = new Set([8,7,6,5,4,3,2,1])
     // var totalPointsSet = new Array(racesLeft).fill(racePointsSet).concat(new Array(sprintsLeft).fill(sprintPointsSet));
     var totalPointsSet = [];
     for (var i = 0; i < racesLeft; i++){
@@ -163,7 +192,7 @@ export default function Drivers(){
         if (tmpDriverPoints.find(x => x.points <= currDriverPoints && !driversAssigned.has(x.name)))
         {
           var driverToIncrease = tmpDriverPoints.find(x => x.points <= currDriverPoints && !driversAssigned.has(x.name))
-          var pointsToAssign = roundUpToNearestPoints(currDriverPoints - driverToIncrease.points, currentRacePoints)
+          var pointsToAssign = getPointsToAssign(currDriverPoints - driverToIncrease.points, currentRacePoints)
           driverToIncrease.points += pointsToAssign;
           currentRacePoints.delete(pointsToAssign)
           driversAssigned.add(driverToIncrease.name)
@@ -174,7 +203,7 @@ export default function Drivers(){
             return
           }
           else{
-            var pointsToAssign = roundUpToNearestPoints(25, currentRacePoints)
+            var pointsToAssign = getPointsToAssign(25, currentRacePoints)
             var driverToAssign = tmpDriverPoints.find(x => !driversAssigned.has(x.name))
             currentRacePoints.delete(pointsToAssign)
             driverToAssign.points += pointsToAssign;
@@ -184,7 +213,7 @@ export default function Drivers(){
       }
     }
 
-    tmpDriverPoints = tmpDriverPoints.sort((a,b) => b.points - a.points)
+    tmpDriverPoints.sort((a,b) => b.points - a.points)
     var currentIndex = 0;
     for (var tmpDriver of tmpDriverPoints){
       currentIndex++;
@@ -262,7 +291,7 @@ export default function Drivers(){
               <td>{driver.name}</td>
               <td>{driver.points}</td>
               <td>{driver.pointsToWin == 0 ? '-' : driver.pointsToWin}</td>
-              <td className={driver.canWin ? "green" : "red"}>{driver.canWin ? "Yes" : "No"}</td>
+              <td className={driver.highestPossible == 1 ? "green" : "red"}>{driver.highestPossible == 1 ? "Yes" : "No"}</td>
               <td className={driver.canWinByThemselves ? "green" : "red"}>{driver.canWinByThemselves ? "Yes" : "No"}</td>
               <td>P{driver.highestPossible}</td>
               <td>P{driver.lowestPossible}</td>
