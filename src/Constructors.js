@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import $ from 'jquery';
 
-export default function Constructors(){
+export default function Constructors(props){
   const [constructorList, setConstructorList] = useState([]);
   const [pointsRemaining, setPointsRemaining] = useState(-1);
   const [pointsRemainingForSecond, setPointsRemainingForSecond] = useState(-1)
-  const [mostRecentRound, setMostRecentRound] = useState(-1);
   const [sumPoints, setSumPoints] = useState(-1)
   const [winningAbilityCalculated, setWinningAbilityCalculated] = useState(false)
 
@@ -41,39 +40,25 @@ export default function Constructors(){
     })
   }
 
-  function getMostRecentRound(){
-    fetch("http://ergast.com/api/f1/current/last/results")
-    .then(response => response.text())
-    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-    .then(data => {
-      setMostRecentRound(parseInt($(data).find("Race").attr("round")))
-    })
-  }
-
-  function getPointsRemaining(){
-    fetch("http://ergast.com/api/f1/current")
-    .then(response => response.text())
-    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-    .then(data => {
-      var totalPointsRemaining = 0;
-      var totalPointsRemainingForSecond = 0;
-      var sumPointsCalculated = 0;
-      $(data).find("Race").each((index, element) => {
-        if (parseInt($(element).attr("round")) > mostRecentRound){
-          totalPointsRemaining += 44;
-          totalPointsRemainingForSecond += 27
-          sumPointsCalculated += 102
-          if ($(element).find("Sprint").length > 0){
-            totalPointsRemaining += 15;
-            totalPointsRemainingForSecond += 11;
-            sumPointsCalculated += 36
-          }
+  function getPointsRemaining(schedule){
+    var totalPointsRemaining = 0;
+    var totalPointsRemainingForSecond = 0;
+    var sumPointsCalculated = 0;
+    $(schedule).find("Race").each((index, element) => {
+      if (parseInt($(element).attr("round")) > props.mostRecentRound){
+        totalPointsRemaining += 44;
+        totalPointsRemainingForSecond += 27
+        sumPointsCalculated += 102
+        if ($(element).find("Sprint").length > 0){
+          totalPointsRemaining += 15;
+          totalPointsRemainingForSecond += 11;
+          sumPointsCalculated += 36
         }
-      })
-      setSumPoints(sumPointsCalculated)
-      setPointsRemaining(totalPointsRemaining);
-      setPointsRemainingForSecond(totalPointsRemainingForSecond);
+      }
     })
+    setSumPoints(sumPointsCalculated)
+    setPointsRemaining(totalPointsRemaining);
+    setPointsRemainingForSecond(totalPointsRemainingForSecond);
   }
 
   function calculateWinningAbility(){
@@ -164,14 +149,13 @@ export default function Constructors(){
 
   useEffect(() => {
     getData()
-    getMostRecentRound()
   }, [])
 
   useEffect(() => {
-    if (mostRecentRound > 0){
-      getPointsRemaining()
+    if (props.mostRecentRound > 0){
+      getPointsRemaining(props.schedule)
     }
-  }, [mostRecentRound])
+  }, [props.mostRecentRound, props.schedule])
 
   useEffect(() => {
     if (constructorList.length > 0){
@@ -208,7 +192,6 @@ export default function Constructors(){
           )
           : null
         }
-
       </tbody>
     </table>
   )

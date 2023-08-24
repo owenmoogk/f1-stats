@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import $ from 'jquery';
 
-export default function Drivers(){
+export default function Drivers(props){
+  
   const [driverList, setDriverList] = useState([]);
   const [pointsRemaining, setPointsRemaining] = useState(-1);
   const [pointsRemainingForSecond, setPointsRemainingForSecond] = useState(-1)
-  const [mostRecentRound, setMostRecentRound] = useState(-1);
   const [racesLeft, setRacesLeft] = useState(-1)
   const [sprintsLeft, setSprintsLeft] = useState(-1)
 
@@ -40,45 +40,27 @@ export default function Drivers(){
     })
   }
 
-  function getMostRecentRound(){
-    fetch("http://ergast.com/api/f1/current/last/results")
-    .then(response => response.text())
-    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-    .then(data => {
-      setMostRecentRound(parseInt($(data).find("Race").attr("round")))
-    })
-  }
-
-  function getPointsRemaining(){
-    fetch("http://ergast.com/api/f1/current")
-    .then(response => response.text())
-    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-    .then(data => {
-
-      const pointsPerRace = 102;
-      const pointsPerSprint = 36;
-
-      var totalPointsRemaining = 0;
-      var totalPointsRemainingForSecond = 0;
-      var races = 0;
-      var sprints = 0;
-      $(data).find("Race").each((index, element) => {
-        if (parseInt($(element).attr("round")) > mostRecentRound){
-          totalPointsRemaining += 26;
-          totalPointsRemainingForSecond += 18
-          races++;
-          if ($(element).find("Sprint").length > 0){
-            totalPointsRemaining += 8;
-            sprints++;
-            totalPointsRemainingForSecond += 7
-          }
+  function getPointsRemaining(schedule){
+    var totalPointsRemaining = 0;
+    var totalPointsRemainingForSecond = 0;
+    var races = 0;
+    var sprints = 0;
+    $(schedule).find("Race").each((_, element) => {
+      if (parseInt($(element).attr("round")) > props.mostRecentRound){
+        totalPointsRemaining += 26;
+        totalPointsRemainingForSecond += 18
+        races++;
+        if ($(element).find("Sprint").length > 0){
+          totalPointsRemaining += 8;
+          sprints++;
+          totalPointsRemainingForSecond += 7
         }
-      })
-      setPointsRemaining(totalPointsRemaining);
-      setPointsRemainingForSecond(totalPointsRemainingForSecond);
-      setRacesLeft(races)
-      setSprintsLeft(sprints)
+      }
     })
+    setPointsRemaining(totalPointsRemaining);
+    setPointsRemainingForSecond(totalPointsRemainingForSecond);
+    setRacesLeft(races)
+    setSprintsLeft(sprints)
   }
 
   // getting a drivers highest possible position
@@ -96,7 +78,6 @@ export default function Drivers(){
     
     var tmpDriverPoints = JSON.parse(JSON.stringify(driverList))
     
-    // var totalPointsSet = new Array(racesLeft).fill(racePointsSet).concat(new Array(sprintsLeft).fill(sprintPointsSet));
     var totalPointsSet = [];
     for (var i = 0; i < racesLeft; i++){
       totalPointsSet.push(new Set([25,18,15,12,10,8,6,4,2,1]))
@@ -238,7 +219,7 @@ export default function Drivers(){
     var maxSecondPlacePoints = secondPlaceDriver.points + pointsRemaining;
     firstPlaceDriver.pointsToWin = maxSecondPlacePoints + 1 - firstPlaceDriver.points;
     
-    // if a driver can win on pure performance
+    // calculating points for the winning driver to secure the championship
     var firstPlacePoints = driverList[0].points;
     for (var driver of driverList){
       if (driver.points + pointsRemaining > firstPlacePoints + pointsRemainingForSecond){
@@ -255,14 +236,13 @@ export default function Drivers(){
 
   useEffect(() => {
     getData()
-    getMostRecentRound()
   }, [])
 
   useEffect(() => {
-    if (mostRecentRound > 0){
-      getPointsRemaining()
+    if (props.mostRecentRound > -1){
+      getPointsRemaining(props.schedule)
     }
-  }, [mostRecentRound])
+  }, [props.mostRecentRound, props.schedule])
 
   useEffect(() => {
     if (driverList.length >= 20){
@@ -299,7 +279,6 @@ export default function Drivers(){
           )
           : null
         }
-
       </tbody>
     </table>
   )

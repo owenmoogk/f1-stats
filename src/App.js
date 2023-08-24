@@ -1,14 +1,39 @@
 import './App.css';
 import Drivers from './Drivers';
 import Constructors from './Constructors';
+import $ from 'jquery';
+import { useState, useEffect } from 'react';
 
 function App() {
+
+  const [mostRecentRound, setMostRecentRound] = useState(-1);
+  const [schedule, setSchedule] = useState();
+
+  function getMostRecentRound(){
+    fetch("http://ergast.com/api/f1/current/last/results")
+    .then(response => response.text())
+    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
+    .then(data => {
+      setMostRecentRound(parseInt($(data).find("Race").attr("round")))
+    })
+  }
+
+  function getSchedule(){
+    fetch("http://ergast.com/api/f1/current")
+    .then(response => response.text())
+    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
+    .then(data => setSchedule(data))
+  }
+
+  useEffect(() => {
+    getMostRecentRound()
+    getSchedule()
+  }, [])
+
   return (
     <div className="App">
-      {/* <div style={{display: "flex", justifyContent: "space-around"}}> */}
-        <Drivers />
-        <Constructors />
-      {/* </div> */}
+        <Drivers mostRecentRound={mostRecentRound} schedule={schedule} />
+        <Constructors mostRecentRound={mostRecentRound} schedule={schedule} />
     </div>
   );
 }
