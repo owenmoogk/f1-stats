@@ -41,22 +41,28 @@ export default function Drivers(props){
   }
 
   function getPointsRemaining(schedule){
+    
     var totalPointsRemaining = 0;
     var totalPointsRemainingForSecond = 0;
     var races = 0;
     var sprints = 0;
+    
     $(schedule).find("Race").each((_, element) => {
       if (parseInt($(element).attr("round")) > props.mostRecentRound){
+        
         totalPointsRemaining += 26;
         totalPointsRemainingForSecond += 18
         races++;
+        
         if ($(element).find("Sprint").length > 0){
           totalPointsRemaining += 8;
-          sprints++;
           totalPointsRemainingForSecond += 7
+          sprints++;
         }
+
       }
     })
+
     setPointsRemaining(totalPointsRemaining);
     setPointsRemainingForSecond(totalPointsRemainingForSecond);
     setRacesLeft(races)
@@ -219,8 +225,7 @@ export default function Drivers(props){
     var maxSecondPlacePoints = secondPlaceDriver.points + pointsRemaining;
     firstPlaceDriver.pointsToWin = maxSecondPlacePoints + 1 - firstPlaceDriver.points;
     
-    // calculating points for the winning driver to secure the championship
-    var firstPlacePoints = driverList[0].points;
+    var firstPlacePoints = firstPlaceDriver.points;
     for (var driver of driverList){
       if (driver.points + pointsRemaining > firstPlacePoints + pointsRemainingForSecond){
         driver.canWinByThemselves = true
