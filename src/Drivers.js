@@ -26,7 +26,7 @@ export default function Drivers(props){
   }
   
   function getData(){
-    fetch ("http://ergast.com/api/f1/current/driverStandings")
+    fetch ("https://ergast.com/api/f1/current/driverStandings")
     .then(response => response.text())
     .then(text => new window.DOMParser().parseFromString(text, "text/xml"))
     .then(xml => {

@@ -26,7 +26,7 @@ export default function Constructors(props){
   }
 
   function getData(){
-    fetch ("http://ergast.com/api/f1/current/constructorStandings")
+    fetch ("https://ergast.com/api/f1/current/constructorStandings")
     .then(response => response.text())
     .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
     .then(data => {

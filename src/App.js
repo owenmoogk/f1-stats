@@ -10,7 +10,7 @@ function App() {
   const [schedule, setSchedule] = useState();
 
   function getMostRecentRound(){
-    fetch("http://ergast.com/api/f1/current/last/results")
+    fetch("https://ergast.com/api/f1/current/last/results")
     .then(response => response.text())
     .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
     .then(data => {
@@ -19,7 +19,7 @@ function App() {
   }
 
   function getSchedule(){
-    fetch("http://ergast.com/api/f1/current")
+    fetch("https://ergast.com/api/f1/current")
     .then(response => response.text())
     .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
     .then(data => setSchedule(data))
