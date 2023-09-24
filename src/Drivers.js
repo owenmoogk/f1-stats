@@ -85,7 +85,7 @@ export default function Drivers(props){
     
     var totalPointsSet = [];
     for (var i = 0; i < racesLeft; i++){
-      totalPointsSet.push(new Set([25,18,15,12,10,8,6,4,2,1]))
+      totalPointsSet.push(new Set([26,18,15,12,10,8,6,4,2,1]))
     }
     for (var i = 0; i < sprintsLeft; i++){
       totalPointsSet.push(new Set([8,7,6,5,4,3,2,1]))
@@ -160,7 +160,7 @@ export default function Drivers(props){
     // var totalPointsSet = new Array(racesLeft).fill(racePointsSet).concat(new Array(sprintsLeft).fill(sprintPointsSet));
     var totalPointsSet = [];
     for (var i = 0; i < racesLeft; i++){
-      totalPointsSet.push(new Set([25,18,15,12,10,8,6,4,2,1]))
+      totalPointsSet.push(new Set([26,18,15,12,10,8,6,4,2,1]))
     }
     for (var i = 0; i < sprintsLeft; i++){
       totalPointsSet.push(new Set([8,7,6,5,4,3,2,1]))

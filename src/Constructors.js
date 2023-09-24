@@ -83,7 +83,7 @@ export default function Constructors(props){
     
     var totalPointsSet = [];
     for (var i = 0; i < racesLeft; i++){
-      totalPointsSet.push(new Set([43,27,18,10,3]))
+      totalPointsSet.push(new Set([44,27,18,10,3]))
     }
     for (var i = 0; i < sprintsLeft; i++){
       totalPointsSet.push(new Set([15,11,7,3]))
@@ -157,7 +157,7 @@ export default function Constructors(props){
 
     var totalPointsSet = [];
     for (var i = 0; i < racesLeft; i++){
-      totalPointsSet.push(new Set([43,27,18,10,3]))
+      totalPointsSet.push(new Set([44,27,18,10,3]))
     }
     for (var i = 0; i < sprintsLeft; i++){
       totalPointsSet.push(new Set([15,11,7,3]))
