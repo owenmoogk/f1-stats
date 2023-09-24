@@ -14,7 +14,6 @@ export default function Drivers(props){
   class DriverPoints{
     name = ""
     points = -1
-    pointsToWin = 0
     canWinByThemselves = false
     highestPossible = -1
     lowestPossible = -1
@@ -223,7 +222,6 @@ export default function Drivers(props){
     var firstPlaceDriver = driverList[0]
     var secondPlaceDriver = driverList[1]
     var maxSecondPlacePoints = secondPlaceDriver.points + pointsRemaining;
-    firstPlaceDriver.pointsToWin = maxSecondPlacePoints + 1 - firstPlaceDriver.points;
     
     var firstPlacePoints = firstPlaceDriver.points;
     for (var driver of driverList){
@@ -263,7 +261,6 @@ export default function Drivers(props){
           <th>Position</th>
           <th>Name</th>
           <th>Points</th>
-          <th>Points to win</th>
           <th>Can Win</th>
           <th>Winnable on Performance</th>
           <th>Highest Possible Position</th>
@@ -275,7 +272,6 @@ export default function Drivers(props){
               <td>{index + 1}</td>
               <td>{driver.name}</td>
               <td>{driver.points}</td>
-              <td>{driver.pointsToWin == 0 ? '-' : driver.pointsToWin}</td>
               <td className={driver.highestPossible == 1 ? "green" : "red"}>{driver.highestPossible == 1 ? "Yes" : "No"}</td>
               <td className={driver.canWinByThemselves ? "green" : "red"}>{driver.canWinByThemselves ? "Yes" : "No"}</td>
               <td>P{driver.highestPossible}</td>

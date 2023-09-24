@@ -14,7 +14,6 @@ export default function Constructors(props){
   class ConstructorPoints{
     name = ""
     points = -1
-    pointsToWin = 0
     canWinByThemselves = false
     highestPossible = -1
     lowestPossible = -1
@@ -219,7 +218,6 @@ export default function Constructors(props){
     var firstPlaceConstructor = constructorList[0]
     var secondPlaceConstructor = constructorList[1]
     var maxSecondPlacePoints = secondPlaceConstructor.points + pointsRemaining;
-    firstPlaceConstructor.pointsToWin = maxSecondPlacePoints + 1 - firstPlaceConstructor.points;
 
     var firstPlacePoints = firstPlaceConstructor.points;
     for (var constructor of constructorList){
@@ -258,7 +256,6 @@ export default function Constructors(props){
           <th>Position</th>
           <th>Name</th>
           <th>Points</th>
-          <th>Points to win</th>
           <th>Can Win</th>
           <th>Winnable on Performance</th>
           <th>Highest Possible Position</th>
@@ -270,7 +267,6 @@ export default function Constructors(props){
               <td>{index + 1}</td>
               <td>{constructor.name}</td>
               <td>{constructor.points}</td>
-              <td>{constructor.pointsToWin == 0 ? '-' : constructor.pointsToWin}</td>
               <td className={constructor.highestPossible == 1 ? "green" : "red"}>{constructor.highestPossible == 1 ? "Yes" : "No"}</td>
               <td className={constructor.canWinByThemselves ? "green" : "red"}>{constructor.canWinByThemselves ? "Yes" : "No"}</td>
               <td>P{constructor.highestPossible}</td>
