@@ -1,26 +1,29 @@
 import { useState, useEffect } from 'react';
 import $ from 'jquery';
 
-export default function Drivers(props){
+export default function Drivers(props: {
+  mostRecentRound: number,
+  schedule: any
+}){
   
-  const [driverList, setDriverList] = useState([]);
-  const [pointsRemaining, setPointsRemaining] = useState(-1);
-  const [pointsRemainingForSecond, setPointsRemainingForSecond] = useState(-1)
-  const [racesLeft, setRacesLeft] = useState(-1)
-  const [sprintsLeft, setSprintsLeft] = useState(-1)
+  const [driverList, setDriverList] = useState<Driver[]>([]);
+  const [pointsRemaining, setPointsRemaining] = useState<number>(-1);
+  const [pointsRemainingForSecond, setPointsRemainingForSecond] = useState<number>(-1)
+  const [racesLeft, setRacesLeft] = useState<number>(-1)
+  const [sprintsLeft, setSprintsLeft] = useState<number>(-1)
 
-  const [winningAbilityCalculated, setWinningAbilityCalculated] = useState(false)
+  const [winningAbilityCalculated, setWinningAbilityCalculated] = useState<boolean>(false)
   
-  class DriverPoints{
+  class Driver{
     name = ""
     points = -1
     canWinByThemselves = false
     highestPossible = -1
     lowestPossible = -1
 
-    constructor(name, points){
+    constructor(name: string, points: number){
       this.name = name
-      this.points = parseInt(points)
+      this.points = points
     }
   }
   
@@ -29,17 +32,17 @@ export default function Drivers(props){
     .then(response => response.text())
     .then(text => new window.DOMParser().parseFromString(text, "text/xml"))
     .then(xml => {
-      var tmpDrivers = [];
+      var tmpDrivers: Driver[] = [];
       $(xml).find("DriverStanding").each((_, driver) => {
         var driverInfo = $(driver).find("Driver")
-        driver = $(driver)
-        tmpDrivers.push(new DriverPoints(driverInfo.find("GivenName").text() + " " + driverInfo.find("FamilyName").text(), driver.attr("points")))
+        var driverElement = $(driver)
+        tmpDrivers.push(new Driver(driverInfo.find("GivenName").text() + " " + driverInfo.find("FamilyName").text(), parseInt(driverElement.attr("points") ?? "0")))
       })
       setDriverList(tmpDrivers);
     })
   }
 
-  function getPointsRemaining(schedule){
+  function getPointsRemaining(schedule: any){
     
     var totalPointsRemaining = 0;
     var totalPointsRemainingForSecond = 0;
@@ -47,7 +50,7 @@ export default function Drivers(props){
     var sprints = 0;
     
     $(schedule).find("Race").each((_, element) => {
-      if (parseInt($(element).attr("round")) > props.mostRecentRound){
+      if (parseInt($(element).attr("round") ?? "0") > props.mostRecentRound){
         
         totalPointsRemaining += 26;
         totalPointsRemainingForSecond += 18
@@ -69,9 +72,9 @@ export default function Drivers(props){
   }
 
   // getting a drivers highest possible position
-  function highestPossiblePosition(driver){
+  function highestPossiblePosition(driver: Driver){
 
-    function getPointsToAssign(number, pointsSet){
+    function getPointsToAssign(number: number, pointsSet: any){
       while (!pointsSet.has(number) && number > 0){
         number--;
       }
@@ -96,22 +99,22 @@ export default function Drivers(props){
     for (var pointsSet of totalPointsSet){
       var maxPoints = Math.max(...pointsSet)
       pointsSet.delete(maxPoints)
-      tmpDriverPoints.find(x => x.name == driver.name).points += maxPoints
+      tmpDriverPoints.find((x: Driver) => x.name == driver.name).points += maxPoints
     }
     
     // continue until there are no more points to be given out
-    var currDriverPoints = tmpDriverPoints.find(x => x.name == driver.name).points;
+    var currDriverPoints = tmpDriverPoints.find((x: Driver) => x.name == driver.name).points;
 
     while(totalPointsSet.length > 0){
-      var currentRacePoints = totalPointsSet.pop();
+      var currentRacePoints = totalPointsSet.pop() ?? new Set();
       driversAssigned.clear()
       driversAssigned.add(driver.name)
 
       // for the current race, distribute the points
       while (currentRacePoints.size > 0){
-        if (tmpDriverPoints.find(x => x.points >= currDriverPoints && !driversAssigned.has(x.name)))
+        if (tmpDriverPoints.find((x: Driver) => x.points >= currDriverPoints && !driversAssigned.has(x.name)))
         {
-          var driverToIncrease = tmpDriverPoints.find(x => x.points >= currDriverPoints && !driversAssigned.has(x.name))
+          var driverToIncrease = tmpDriverPoints.find((x: Driver) => x.points >= currDriverPoints && !driversAssigned.has(x.name))
           var pointsToAssign = getPointsToAssign(currDriverPoints - driverToIncrease.points, currentRacePoints)
           driverToIncrease.points += pointsToAssign;
           currentRacePoints.delete(pointsToAssign)
@@ -119,8 +122,8 @@ export default function Drivers(props){
         }
         else{
           // sort so that the lowest scoring driver is first
-          tmpDriverPoints.sort((a,b) => a.points - b.points)
-          var driverToAssign = tmpDriverPoints.find(x => !driversAssigned.has(x.name))
+          tmpDriverPoints.sort((a: Driver, b: Driver) => a.points - b.points)
+          var driverToAssign = tmpDriverPoints.find((x: Driver) => !driversAssigned.has(x.name))
           var pointsToAssign = getPointsToAssign(currDriverPoints - driverToAssign.points, currentRacePoints)
           currentRacePoints.delete(pointsToAssign)
           driverToAssign.points += pointsToAssign;
@@ -129,7 +132,7 @@ export default function Drivers(props){
       }
     }
 
-    tmpDriverPoints.sort((a,b) => b.points - a.points)
+    tmpDriverPoints.sort((a: Driver, b: Driver) => b.points - a.points)
     var currentIndex = 0;
     for (var tmpDriver of tmpDriverPoints){
       currentIndex++;
@@ -141,9 +144,9 @@ export default function Drivers(props){
   }
 
   // getting a drivers lowest possible position
-  function lowestPossiblePosition(driver){
+  function lowestPossiblePosition(driver: Driver){
 
-    function getPointsToAssign(pointsDiff, pointsSet){
+    function getPointsToAssign(pointsDiff: number, pointsSet: any){
       var number = pointsDiff + 1;
       while (!pointsSet.has(number) && number < 25){
         number++;
@@ -155,7 +158,7 @@ export default function Drivers(props){
     }
     
     var tmpDriverPoints = JSON.parse(JSON.stringify(driverList))
-    var currDriverPoints = tmpDriverPoints.find(x => x.name == driver.name).points;
+    var currDriverPoints = tmpDriverPoints.find((x: Driver) => x.name == driver.name).points;
 
     // var totalPointsSet = new Array(racesLeft).fill(racePointsSet).concat(new Array(sprintsLeft).fill(sprintPointsSet));
     var totalPointsSet = [];
@@ -169,28 +172,28 @@ export default function Drivers(props){
 
     // continue until there are no more points to be given out
     while(totalPointsSet.length > 0){
-      var currentRacePoints = totalPointsSet.pop();
+      var currentRacePoints = totalPointsSet.pop() ?? new Set();
       driversAssigned.clear()
       driversAssigned.add(driver.name)
 
       // for the current race, distribute the points
       while (currentRacePoints.size > 0){
-        if (tmpDriverPoints.find(x => x.points <= currDriverPoints && !driversAssigned.has(x.name)))
+        if (tmpDriverPoints.find((x: Driver) => x.points <= currDriverPoints && !driversAssigned.has(x.name)))
         {
-          var driverToIncrease = tmpDriverPoints.find(x => x.points <= currDriverPoints && !driversAssigned.has(x.name))
+          var driverToIncrease = tmpDriverPoints.find((x: Driver) => x.points <= currDriverPoints && !driversAssigned.has(x.name))
           var pointsToAssign = getPointsToAssign(currDriverPoints - driverToIncrease.points, currentRacePoints)
           driverToIncrease.points += pointsToAssign;
           currentRacePoints.delete(pointsToAssign)
           driversAssigned.add(driverToIncrease.name)
         }
         else{
-          if (!tmpDriverPoints.find(x => x.points < currDriverPoints)){
+          if (!tmpDriverPoints.find((x: Driver) => x.points < currDriverPoints)){
             driver.lowestPossible = driverList.length
             return
           }
           else{
             var pointsToAssign = getPointsToAssign(25, currentRacePoints)
-            var driverToAssign = tmpDriverPoints.find(x => !driversAssigned.has(x.name))
+            var driverToAssign = tmpDriverPoints.find((x: Driver) => !driversAssigned.has(x.name))
             currentRacePoints.delete(pointsToAssign)
             driverToAssign.points += pointsToAssign;
             driversAssigned.add(driverToAssign.name)
@@ -199,7 +202,7 @@ export default function Drivers(props){
       }
     }
 
-    tmpDriverPoints.sort((a,b) => b.points - a.points)
+    tmpDriverPoints.sort((a: Driver, b: Driver) => b.points - a.points)
     var currentIndex = 0;
     for (var tmpDriver of tmpDriverPoints){
       currentIndex++;

@@ -1,20 +1,20 @@
 import './App.css';
 import Drivers from './Drivers';
 import Constructors from './Constructors';
-import $ from 'jquery';
+import $ from 'jquery'
 import { useState, useEffect } from 'react';
 
 function App() {
 
-  const [mostRecentRound, setMostRecentRound] = useState(-1);
-  const [schedule, setSchedule] = useState();
+  const [mostRecentRound, setMostRecentRound] = useState<number>(-1);
+  const [schedule, setSchedule] = useState<any>();
 
   function getMostRecentRound(){
     fetch("https://ergast.com/api/f1/current/last/results")
     .then(response => response.text())
     .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
     .then(data => {
-      setMostRecentRound(parseInt($(data).find("Race").attr("round")))
+      setMostRecentRound(parseInt($(data).find("Race").attr("round") ?? ""))
     })
   }
 

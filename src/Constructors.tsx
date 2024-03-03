@@ -1,26 +1,28 @@
 import { useState, useEffect } from 'react';
 import $ from 'jquery';
 
-export default function Constructors(props){
+export default function Constructors(props: {
+  mostRecentRound: number,
+  schedule: any
+}){
 
-  const [constructorList, setConstructorList] = useState([]);
-  const [pointsRemaining, setPointsRemaining] = useState(-1);
-  const [pointsRemainingForSecond, setPointsRemainingForSecond] = useState(-1)
-  const [racesLeft, setRacesLeft] = useState(-1)
-  const [sprintsLeft, setSprintsLeft] = useState(-1)
-  
-  const [winningAbilityCalculated, setWinningAbilityCalculated] = useState(false)
+  const [constructorList, setConstructorList] = useState<Constructor[]>([]);
+  const [pointsRemaining, setPointsRemaining] = useState<number>(-1);
+  const [pointsRemainingForSecond, setPointsRemainingForSecond] = useState<number>(-1)
+  const [racesLeft, setRacesLeft] = useState<number>(-1)
+  const [sprintsLeft, setSprintsLeft] = useState<number>(-1)
+  const [winningAbilityCalculated, setWinningAbilityCalculated] = useState<boolean>(false)
 
-  class ConstructorPoints{
+  class Constructor{
     name = ""
     points = -1
     canWinByThemselves = false
     highestPossible = -1
     lowestPossible = -1
 
-    constructor(name, points){
+    constructor(name: string, points: number){
       this.name = name
-      this.points = parseInt(points)
+      this.points = points
     }
   }
 
@@ -29,15 +31,15 @@ export default function Constructors(props){
     .then(response => response.text())
     .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
     .then(data => {
-      var x = [];
-      data = $(data).find("ConstructorStanding").each((index, element) => {
-        x.push(new ConstructorPoints($(element).find("Name").text(), $(element).attr("points")));
+      var x: Constructor[] = [];
+      $(data).find("ConstructorStanding").each((index, element) => {
+        x.push(new Constructor($(element).find("Name").text(), parseInt($(element).attr("points") ?? "0")));
       });
       setConstructorList(x);
     })
   }
 
-  function getPointsRemaining(schedule){
+  function getPointsRemaining(schedule: any){
     
     var totalPointsRemaining = 0;
     var totalPointsRemainingForSecond = 0;
@@ -45,7 +47,7 @@ export default function Constructors(props){
     var sprints = 0;
     
     $(schedule).find("Race").each((_, element) => {
-      if (parseInt($(element).attr("round")) > props.mostRecentRound){
+      if (parseInt($(element).attr("round") ?? "0") > props.mostRecentRound){
         
         totalPointsRemaining += 44;
         totalPointsRemainingForSecond += 27
@@ -67,9 +69,9 @@ export default function Constructors(props){
   }
 
   // getting a constructors highest possible position
-  function highestPossiblePosition(constructor){
+  function highestPossiblePosition(constructor: Constructor){
 
-    function getPointsToAssign(number, pointsSet){
+    function getPointsToAssign(number: number, pointsSet:any){
       while (!pointsSet.has(number) && number > 0){
         number--;
       }
@@ -81,7 +83,7 @@ export default function Constructors(props){
     
     var tmpConstructorPoints = JSON.parse(JSON.stringify(constructorList))
     
-    var totalPointsSet = [];
+    var totalPointsSet: Set<number>[] = [];
     for (var i = 0; i < racesLeft; i++){
       totalPointsSet.push(new Set([44,27,18,10,3]))
     }
@@ -94,22 +96,22 @@ export default function Constructors(props){
     for (var pointsSet of totalPointsSet){
       var maxPoints = Math.max(...pointsSet)
       pointsSet.delete(maxPoints)
-      tmpConstructorPoints.find(x => x.name == constructor.name).points += maxPoints
+      tmpConstructorPoints.find((x: Constructor) => x.name == constructor.name).points += maxPoints
     }
     
     // continue until there are no more points to be given out
-    var currConstructorPoints = tmpConstructorPoints.find(x => x.name == constructor.name).points;
+    var currConstructorPoints = tmpConstructorPoints.find((x: Constructor) => x.name == constructor.name).points;
 
     while(totalPointsSet.length > 0){
-      var currentRacePoints = totalPointsSet.pop();
+      var currentRacePoints = totalPointsSet.pop() ?? new Set();
       constructorsAssigned.clear()
       constructorsAssigned.add(constructor.name)
 
       // for the current race, distribute the points
       while (currentRacePoints.size > 0){
-        if (tmpConstructorPoints.find(x => x.points >= currConstructorPoints && !constructorsAssigned.has(x.name)))
+        if (tmpConstructorPoints.find((x: Constructor) => x.points >= currConstructorPoints && !constructorsAssigned.has(x.name)))
         {
-          var constructorToIncrease = tmpConstructorPoints.find(x => x.points >= currConstructorPoints && !constructorsAssigned.has(x.name))
+          var constructorToIncrease = tmpConstructorPoints.find((x: Constructor) => x.points >= currConstructorPoints && !constructorsAssigned.has(x.name))
           var pointsToAssign = getPointsToAssign(currConstructorPoints - constructorToIncrease.points, currentRacePoints)
           constructorToIncrease.points += pointsToAssign;
           currentRacePoints.delete(pointsToAssign)
@@ -117,8 +119,8 @@ export default function Constructors(props){
         }
         else{
           // sort so that the lowest scoring constructor is first
-          tmpConstructorPoints.sort((a,b) => a.points - b.points)
-          var constructorToAssign = tmpConstructorPoints.find(x => !constructorsAssigned.has(x.name))
+          tmpConstructorPoints.sort((a: Constructor, b: Constructor) => a.points - b.points)
+          var constructorToAssign = tmpConstructorPoints.find((x: Constructor)  => !constructorsAssigned.has(x.name))
           var pointsToAssign = getPointsToAssign(currConstructorPoints - constructorToAssign.points, currentRacePoints)
           currentRacePoints.delete(pointsToAssign)
           constructorToAssign.points += pointsToAssign;
@@ -127,7 +129,7 @@ export default function Constructors(props){
       }
     }
 
-    tmpConstructorPoints.sort((a,b) => b.points - a.points)
+    tmpConstructorPoints.sort((a: Constructor, b: Constructor) => b.points - a.points)
     var currentIndex = 0;
     for (var tmpConstructor of tmpConstructorPoints){
       currentIndex++;
@@ -139,9 +141,9 @@ export default function Constructors(props){
   }
 
   // getting a constructors lowest possible position
-  function lowestPossiblePosition(constructor){
+  function lowestPossiblePosition(constructor: Constructor){
 
-    function getPointsToAssign(pointsDiff, pointsSet){
+    function getPointsToAssign(pointsDiff: number, pointsSet: any){
       var number = pointsDiff + 1;
       while (!pointsSet.has(number) && number < 25){
         number++;
@@ -153,7 +155,7 @@ export default function Constructors(props){
     }
     
     var tmpConstructorPoints = JSON.parse(JSON.stringify(constructorList))
-    var currConstructorPoints = tmpConstructorPoints.find(x => x.name == constructor.name).points;
+    var currConstructorPoints = tmpConstructorPoints.find((x: Constructor) => x.name == constructor.name).points;
 
     var totalPointsSet = [];
     for (var i = 0; i < racesLeft; i++){
@@ -166,28 +168,28 @@ export default function Constructors(props){
 
     // continue until there are no more points to be given out
     while(totalPointsSet.length > 0){
-      var currentRacePoints = totalPointsSet.pop();
+      var currentRacePoints = totalPointsSet.pop() ?? new Set();
       constructorsAssigned.clear()
       constructorsAssigned.add(constructor.name)
 
       // for the current race, distribute the points
       while (currentRacePoints.size > 0){
-        if (tmpConstructorPoints.find(x => x.points <= currConstructorPoints && !constructorsAssigned.has(x.name)))
+        if (tmpConstructorPoints.find((x: Constructor) => x.points <= currConstructorPoints && !constructorsAssigned.has(x.name)))
         {
-          var constructorToIncrease = tmpConstructorPoints.find(x => x.points <= currConstructorPoints && !constructorsAssigned.has(x.name))
+          var constructorToIncrease = tmpConstructorPoints.find((x: Constructor) => x.points <= currConstructorPoints && !constructorsAssigned.has(x.name))
           var pointsToAssign = getPointsToAssign(currConstructorPoints - constructorToIncrease.points, currentRacePoints)
           constructorToIncrease.points += pointsToAssign;
           currentRacePoints.delete(pointsToAssign)
           constructorsAssigned.add(constructorToIncrease.name)
         }
         else{
-          if (!tmpConstructorPoints.find(x => x.points < currConstructorPoints)){
+          if (!tmpConstructorPoints.find((x: Constructor) => x.points < currConstructorPoints)){
             constructor.lowestPossible = constructorList.length
             return
           }
           else{
             var pointsToAssign = getPointsToAssign(43, currentRacePoints)
-            var constructorToAssign = tmpConstructorPoints.find(x => !constructorsAssigned.has(x.name))
+            var constructorToAssign = tmpConstructorPoints.find((x: Constructor) => !constructorsAssigned.has(x.name))
             currentRacePoints.delete(pointsToAssign)
             constructorToAssign.points += pointsToAssign;
             constructorsAssigned.add(constructorToAssign.name)
@@ -196,7 +198,7 @@ export default function Constructors(props){
       }
     }
 
-    tmpConstructorPoints.sort((a,b) => b.points - a.points)
+    tmpConstructorPoints.sort((a: Constructor, b: Constructor) => b.points - a.points)
     var currentIndex = 0;
     for (var tmpConstructor of tmpConstructorPoints){
       currentIndex++;
