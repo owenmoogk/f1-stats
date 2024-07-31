@@ -32,6 +32,7 @@ function App() {
 
   return (
     <div className="App">
+		<p>Note: This webpage will no longer be functional, due to the deprecation of the Ergast F1 API. Until a (free) alternative is found, it will remain unfunctional.</p>
         <Drivers mostRecentRound={mostRecentRound} schedule={schedule} />
         <Constructors mostRecentRound={mostRecentRound} schedule={schedule} />
     </div>
