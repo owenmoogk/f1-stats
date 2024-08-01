@@ -11,21 +11,18 @@ export default function Drivers(props: {
 
 	useEffect(() => {
 		const fetchData = async () => {
-			setDriverList(await getDriverList())
+			var pointsData = props.pointsData
+			var racesLeft = pointsData.racesLeft
+			var sprintsLeft = pointsData.sprintsLeft
+			var pointsRemaining = pointsData.constructorPoints
+			var pointsRemainingForSecond = pointsData.constructorPointsForSecond
+
+			var tmpDriverList = await getDriverList();
+			tmpDriverList = calculateWinningAbility(tmpDriverList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft)
+			setDriverList(tmpDriverList)
 		}
 		fetchData()
-	}, [])
-
-	useEffect(() => {
-		var pointsData = props.pointsData
-		var racesLeft = pointsData.racesLeft
-		var sprintsLeft = pointsData.sprintsLeft
-		var pointsRemaining = pointsData.constructorPoints
-		var pointsRemainingForSecond = pointsData.constructorPointsForSecond
-		if (driverList.length >= 20) {
-			setDriverList(calculateWinningAbility(driverList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft))
-		}
-	}, [props, setDriverList, driverList])
+	}, [props])
 
 
 	return (

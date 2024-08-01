@@ -6,28 +6,23 @@ import { calculateWinningAbility, PointsData } from './util';
 export default function Constructors(props: {
 	pointsData: PointsData,
 }) {
-	const [constructorList, setConstructorList] = useState<Constructor[]>([]);
 
+	const [constructorList, setConstructorList] = useState<Constructor[]>([]);
 
 	useEffect(() => {
 		const getData = async () => {
-			setConstructorList(await getConstructorList())
+			var pointsData = props.pointsData
+			var racesLeft = pointsData.racesLeft
+			var sprintsLeft = pointsData.sprintsLeft
+			var pointsRemaining = pointsData.constructorPoints
+			var pointsRemainingForSecond = pointsData.constructorPointsForSecond
+
+			var tmpConstructorList = await getConstructorList();
+			tmpConstructorList = calculateWinningAbility(tmpConstructorList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft)
+			setConstructorList(tmpConstructorList);
 		}
 		getData()
-	}, [])
-
-
-
-	useEffect(() => {
-		var pointsData = props.pointsData
-		var racesLeft = pointsData.racesLeft
-		var sprintsLeft = pointsData.sprintsLeft
-		var pointsRemaining = pointsData.constructorPoints
-		var pointsRemainingForSecond = pointsData.constructorPointsForSecond
-		if (constructorList.length > 0) {
-			setConstructorList(calculateWinningAbility(constructorList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft))
-		}
-	}, [constructorList, setConstructorList, props.pointsData])
+	}, [props])
 
 
 	return (

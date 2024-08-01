@@ -49,10 +49,7 @@ export function getPointsRemaining(schedule: XMLDocument, mostRecentRound: numbe
 	return returnData
 }
 
-
-
 export function calculateWinningAbility(scorerList: Scorer[], pointsRemaining: number, pointsRemainingForSecond: number, racesLeft: number, sprintsLeft: number) {
-
 	for (var scorer of scorerList) {
 		highestPossiblePosition(scorer, scorerList, racesLeft, sprintsLeft)
 		lowestPossiblePosition(scorer, scorerList, racesLeft, sprintsLeft)
@@ -73,7 +70,6 @@ export function calculateWinningAbility(scorerList: Scorer[], pointsRemaining: n
 	return scorerList
 }
 
-// getting a constructors highest possible position
 function highestPossiblePosition(scorer: Scorer, scorerList: Scorer[], racesLeft: number, sprintsLeft: number) {
 
 	function getPointsToAssign(number: number, pointsSet: any) {
@@ -144,7 +140,6 @@ function highestPossiblePosition(scorer: Scorer, scorerList: Scorer[], racesLeft
 	}
 }
 
-// getting a constructors lowest possible position
 function lowestPossiblePosition(scorer: Scorer, scorerList: Scorer[], racesLeft: number, sprintsLeft: number) {
 
 	function getPointsToAssign(pointsDiff: number, pointsSet: any) {
