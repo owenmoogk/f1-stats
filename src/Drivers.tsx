@@ -34,7 +34,7 @@ export default function Drivers(props: {
 					<th>Name</th>
 					<th>Points</th>
 					<th>Can Win</th>
-					<th>Winnable on Performance</th>
+					<th className="hoverTooltip" title="If a driver scores the most points possible, does it guarantee them the championship?">Winnable on Performance</th>
 					<th>Highest Possible Position</th>
 					<th>Lowest Possible Position</th>
 				</tr>

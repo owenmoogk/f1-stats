@@ -20,3 +20,8 @@ table{
 td, th{
 	padding: 3px 10px !important;
 }
+
+.hoverTooltip{
+	text-decoration: underline 2px dotted #000;
+	cursor: help; /* Changes the cursor to a question mark*/
+}
