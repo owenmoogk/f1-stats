@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Driver } from "./types";
 import { getDriverList } from './api';
 import { calculateWinningAbility, PointsData } from './util';
+import { interpolateColor } from './display';
 
 export default function Drivers(props: {
 	pointsData: PointsData,
@@ -37,17 +38,25 @@ export default function Drivers(props: {
 					<th>Highest Possible Position</th>
 					<th>Lowest Possible Position</th>
 				</tr>
-				{driverList.map((driver, index) =>
-					<tr key={index}>
-						<td>{index + 1}</td>
-						<td>{driver.name}</td>
-						<td>{driver.points}</td>
-						<td className={driver.highestPossible === 1 ? "green" : "red"}>{driver.highestPossible === 1 ? "Yes" : "No"}</td>
-						<td className={driver.canWinByThemselves ? "green" : "red"}>{driver.canWinByThemselves ? "Yes" : "No"}</td>
-						<td>P{driver.highestPossible}</td>
-						<td>P{driver.lowestPossible}</td>
-					</tr>
-				)}
+				{driverList.map((driver, index) => {
+					const highestPossibleColor = interpolateColor(driver.highestPossible, driverList.length);
+					const lowestPossibleColor = interpolateColor(driver.lowestPossible, driverList.length);
+					return (
+						<tr key={index}>
+							<td>{index + 1}</td>
+							<td>{driver.name}</td>
+							<td>{driver.points}</td>
+							<td className={driver.highestPossible === 1 ? "green" : "red"}>{driver.highestPossible === 1 ? "Yes" : "No"}</td>
+							<td className={driver.canWinByThemselves ? "green" : "red"}>{driver.canWinByThemselves ? "Yes" : "No"}</td>
+							<td style={{ backgroundColor: highestPossibleColor }}>
+								P{driver.highestPossible}
+							</td>
+							<td style={{ backgroundColor: lowestPossibleColor }}>
+								P{driver.lowestPossible}
+							</td>
+						</tr>
+					)
+				})}
 			</tbody>
 		</table>
 	)

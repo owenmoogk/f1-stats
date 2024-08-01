@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Constructor } from "./types";
 import { getConstructorList } from './api';
 import { calculateWinningAbility, PointsData } from './util';
+import { interpolateColor } from './display';
 
 export default function Constructors(props: {
 	pointsData: PointsData,
@@ -37,17 +38,25 @@ export default function Constructors(props: {
 					<th>Highest Possible Position</th>
 					<th>Lowest Possible Position</th>
 				</tr>
-				{constructorList.map((constructor, index) =>
-					<tr key={index}>
-						<td>{index + 1}</td>
-						<td>{constructor.name}</td>
-						<td>{constructor.points}</td>
-						<td className={constructor.highestPossible === 1 ? "green" : "red"}>{constructor.highestPossible === 1 ? "Yes" : "No"}</td>
-						<td className={constructor.canWinByThemselves ? "green" : "red"}>{constructor.canWinByThemselves ? "Yes" : "No"}</td>
-						<td>P{constructor.highestPossible}</td>
-						<td>P{constructor.lowestPossible}</td>
-					</tr>
-				)}
+				{constructorList.map((constructor, index) => {
+					const highestPossibleColor = interpolateColor(constructor.highestPossible, constructorList.length);
+					const lowestPossibleColor = interpolateColor(constructor.lowestPossible, constructorList.length);
+					return (
+						<tr key={index}>
+							<td>{index + 1}</td>
+							<td>{constructor.name}</td>
+							<td>{constructor.points}</td>
+							<td className={constructor.highestPossible === 1 ? "green" : "red"}>{constructor.highestPossible === 1 ? "Yes" : "No"}</td>
+							<td className={constructor.canWinByThemselves ? "green" : "red"}>{constructor.canWinByThemselves ? "Yes" : "No"}</td>
+							<td style={{ backgroundColor: highestPossibleColor }}>
+								P{constructor.highestPossible}
+							</td>
+							<td style={{ backgroundColor: lowestPossibleColor }}>
+								P{constructor.lowestPossible}
+							</td>
+						</tr>
+					)
+				})}
 			</tbody>
 		</table>
 	)
