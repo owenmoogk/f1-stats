@@ -15,8 +15,8 @@ export default function Drivers(props: {
 			var pointsData = props.pointsData
 			var racesLeft = pointsData.racesLeft
 			var sprintsLeft = pointsData.sprintsLeft
-			var pointsRemaining = pointsData.constructorPoints
-			var pointsRemainingForSecond = pointsData.constructorPointsForSecond
+			var pointsRemaining = pointsData.driverPoints
+			var pointsRemainingForSecond = pointsData.driverPointsForSecond
 
 			var tmpDriverList = await getDriverList();
 			tmpDriverList = calculateWinningAbility(tmpDriverList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft)

@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { Scorer } from './types';
+import { Constructor, Driver, Scorer } from './types';
 
 export type PointsData = {
 	driverPoints: number,
@@ -70,6 +70,12 @@ export function calculateWinningAbility(scorerList: Scorer[], pointsRemaining: n
 	return scorerList
 }
 
+const constructorMaxPoints = [44, 27, 18, 10, 3]
+const constructorMaxSprintPoints = [15, 11, 7, 3]
+
+const driverMaxPoints = [26, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+const driverMaxSprintPoints = [8, 7, 6, 5, 4, 3, 2, 1]
+
 function highestPossiblePosition(scorer: Scorer, scorerList: Scorer[], racesLeft: number, sprintsLeft: number) {
 
 	function getPointsToAssign(number: number, pointsSet: any) {
@@ -86,10 +92,20 @@ function highestPossiblePosition(scorer: Scorer, scorerList: Scorer[], racesLeft
 
 	var totalPointsSet: Set<number>[] = [];
 	for (var i = 0; i < racesLeft; i++) {
-		totalPointsSet.push(new Set([44, 27, 18, 10, 3]))
+		if (scorer instanceof Driver){
+			totalPointsSet.push(new Set(driverMaxPoints))
+		}
+		else if (scorer instanceof Constructor){
+			totalPointsSet.push(new Set(constructorMaxPoints))
+		}
 	}
 	for (var i = 0; i < sprintsLeft; i++) {
-		totalPointsSet.push(new Set([15, 11, 7, 3]))
+		if (scorer instanceof Driver){
+			totalPointsSet.push(new Set(driverMaxSprintPoints))
+		}
+		else if (scorer instanceof Constructor){
+			totalPointsSet.push(new Set(constructorMaxSprintPoints))
+		}
 	}
 	var constructorsAssigned = new Set();
 
@@ -158,10 +174,20 @@ function lowestPossiblePosition(scorer: Scorer, scorerList: Scorer[], racesLeft:
 
 	var totalPointsSet = [];
 	for (var i = 0; i < racesLeft; i++) {
-		totalPointsSet.push(new Set([44, 27, 18, 10, 3]))
+		if (scorer instanceof Driver){
+			totalPointsSet.push(new Set(driverMaxPoints))
+		}
+		else if (scorer instanceof Constructor){
+			totalPointsSet.push(new Set(constructorMaxPoints))
+		}
 	}
 	for (var i = 0; i < sprintsLeft; i++) {
-		totalPointsSet.push(new Set([15, 11, 7, 3]))
+		if (scorer instanceof Driver){
+			totalPointsSet.push(new Set(driverMaxPoints))
+		}
+		else if (scorer instanceof Constructor){
+			totalPointsSet.push(new Set(constructorMaxPoints))
+		}
 	}
 	var constructorsAssigned = new Set();
 
