@@ -1,0 +1,2 @@
+Making all of the components type generic would be cool
+(I'm a nerd)
