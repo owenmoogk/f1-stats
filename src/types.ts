@@ -11,10 +11,6 @@ export class Scorer {
 	}
 }
 
-export class Driver extends Scorer {
+export class Driver extends Scorer{}
 
-}
-
-export class Constructor extends Scorer {
-
-}
+export class Constructor extends Scorer{}

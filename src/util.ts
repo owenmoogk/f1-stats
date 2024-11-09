@@ -183,10 +183,10 @@ function lowestPossiblePosition(scorer: Scorer, scorerList: Scorer[], racesLeft:
 	}
 	for (var i = 0; i < sprintsLeft; i++) {
 		if (scorer instanceof Driver){
-			totalPointsSet.push(new Set(driverMaxPoints))
+			totalPointsSet.push(new Set(driverMaxSprintPoints))
 		}
 		else if (scorer instanceof Constructor){
-			totalPointsSet.push(new Set(constructorMaxPoints))
+			totalPointsSet.push(new Set(constructorMaxSprintPoints))
 		}
 	}
 	var constructorsAssigned = new Set();
