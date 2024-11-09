@@ -41,9 +41,10 @@ export default function Constructors(props: {
 				{constructorList.map((constructor, index) => {
 					const highestPossibleColor = interpolateColor(constructor.highestPossible, constructorList.length);
 					const lowestPossibleColor = interpolateColor(constructor.lowestPossible, constructorList.length);
+					const lockedIn = constructor.highestPossible === constructor.lowestPossible
 					return (
 						<tr key={index}>
-							<td>{index + 1}</td>
+							<td style={{backgroundColor: lockedIn ? "lightgrey": "", cursor: lockedIn ? "help" : ""}} title={lockedIn ? 'Locked In: This constructors finishing position is already determined.' : ""} >{index + 1}</td>
 							<td>{constructor.name}</td>
 							<td>{constructor.points}</td>
 							<td className={constructor.highestPossible === 1 ? "green" : "red"}>{constructor.highestPossible === 1 ? "Yes" : "No"}</td>
