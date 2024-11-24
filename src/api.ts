@@ -29,7 +29,7 @@ export async function getMostRecentRound() {
 	var response = await fetch("https://ergast.com/api/f1/current/last/results")
 	var text = await response.text();
 	var xml = new window.DOMParser().parseFromString(text, "text/xml")
-	return (parseInt($(xml).find("Race").attr("round") ?? ""))
+	return $(xml).find("Race")
 }
 
 export async function getSchedule() {

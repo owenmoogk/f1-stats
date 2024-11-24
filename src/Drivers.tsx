@@ -43,7 +43,7 @@ export default function Drivers(props: {
 					const lowestPossibleColor = interpolateColor(driver.lowestPossible, driverList.length);
 					const lockedIn = driver.highestPossible === driver.lowestPossible
 					return (
-						<tr key={index} style={{backgroundColor: lockedIn ? "lightgrey" : ""}}>
+						<tr key={index}>
 							<td style={{backgroundColor: lockedIn ? "lightgrey": "", cursor: lockedIn ? "help" : ""}} title={lockedIn ? 'Locked In: This drivers finishing position is already determined.' : ""} >{index + 1}</td>
 							<td>{driver.name}</td>
 							<td>{driver.points}</td>
