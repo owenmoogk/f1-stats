@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Driver } from "./types";
-import { getDriverList } from './api';
+import {  useGetDriverList } from './api';
 import { calculateWinningAbility, PointsData } from './util';
 import { interpolateColor } from './display';
 
@@ -8,22 +8,20 @@ export default function Drivers(props: {
 	pointsData: PointsData,
 }) {
 
+	const tmpDriverList = useGetDriverList();
 	const [driverList, setDriverList] = useState<Driver[]>([]);
 
 	useEffect(() => {
-		const fetchData = async () => {
-			var pointsData = props.pointsData
-			var racesLeft = pointsData.racesLeft
-			var sprintsLeft = pointsData.sprintsLeft
-			var pointsRemaining = pointsData.driverPoints
-			var pointsRemainingForSecond = pointsData.driverPointsForSecond
+		if (!tmpDriverList.length || !props.pointsData) return;
+		var pointsData = props.pointsData
+		var racesLeft = pointsData.racesLeft
+		var sprintsLeft = pointsData.sprintsLeft
+		var pointsRemaining = pointsData.driverPoints
+		var pointsRemainingForSecond = pointsData.driverPointsForSecond
 
-			var tmpDriverList = await getDriverList();
-			tmpDriverList = calculateWinningAbility(tmpDriverList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft)
-			setDriverList(tmpDriverList)
-		}
-		fetchData()
-	}, [props])
+		const result = calculateWinningAbility(tmpDriverList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft)
+		setDriverList(result);
+	}, [props, tmpDriverList])
 
 
 	return (

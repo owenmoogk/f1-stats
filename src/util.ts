@@ -1,5 +1,5 @@
-import $ from 'jquery';
 import { Constructor, Driver, Scorer } from './types';
+import { Race } from './api';
 
 export type PointsData = {
 	driverPoints: number,
@@ -10,7 +10,7 @@ export type PointsData = {
 	sprintsLeft: number
 }
 
-export function getPointsRemaining(schedule: XMLDocument, mostRecentRound: number) {
+export function getPointsRemaining(schedule: Race[], mostRecentRound: number) {
 
 	var constructorPoints = 0;
 	var constructorPointsForSecond = 0;
@@ -19,8 +19,8 @@ export function getPointsRemaining(schedule: XMLDocument, mostRecentRound: numbe
 	var racesLeft = 0;
 	var sprintsLeft = 0;
 
-	$(schedule).find("Race").each((_, element) => {
-		if (parseInt($(element).attr("round") ?? "0") > mostRecentRound) {
+	schedule.forEach((race) => {
+		if (race.round > mostRecentRound) {
 
 			constructorPoints += 44;
 			constructorPointsForSecond += 27
@@ -28,7 +28,7 @@ export function getPointsRemaining(schedule: XMLDocument, mostRecentRound: numbe
 			driverPointsForSecond += 18
 			racesLeft++
 
-			if ($(element).find("Sprint").length > 0) {
+			if (race.Sprint) {
 				constructorPoints += 15;
 				constructorPointsForSecond += 11;
 				driverPoints += 8

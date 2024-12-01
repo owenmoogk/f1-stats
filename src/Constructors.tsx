@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Constructor } from "./types";
-import { getConstructorList } from './api';
+import { useGetConstructorList } from './api';
 import { calculateWinningAbility, PointsData } from './util';
 import { interpolateColor } from './display';
 
@@ -8,22 +8,20 @@ export default function Constructors(props: {
 	pointsData: PointsData,
 }) {
 
+	const tmpConstructorList = useGetConstructorList();
 	const [constructorList, setConstructorList] = useState<Constructor[]>([]);
 
 	useEffect(() => {
-		const getData = async () => {
-			var pointsData = props.pointsData
-			var racesLeft = pointsData.racesLeft
-			var sprintsLeft = pointsData.sprintsLeft
-			var pointsRemaining = pointsData.constructorPoints
-			var pointsRemainingForSecond = pointsData.constructorPointsForSecond
+		if (!tmpConstructorList.length || !props.pointsData) return;
+		var pointsData = props.pointsData
+		var racesLeft = pointsData.racesLeft
+		var sprintsLeft = pointsData.sprintsLeft
+		var pointsRemaining = pointsData.constructorPoints
+		var pointsRemainingForSecond = pointsData.constructorPointsForSecond
 
-			var tmpConstructorList = await getConstructorList();
-			tmpConstructorList = calculateWinningAbility(tmpConstructorList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft)
-			setConstructorList(tmpConstructorList);
-		}
-		getData()
-	}, [props])
+		const result = calculateWinningAbility(tmpConstructorList, pointsRemaining, pointsRemainingForSecond, racesLeft, sprintsLeft)
+		setConstructorList(result);
+	}, [props, tmpConstructorList])
 
 
 	return (

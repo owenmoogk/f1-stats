@@ -1,40 +1,86 @@
-import { Driver, Constructor } from "./types";
-import $ from 'jquery';
+import { useEffect, useState } from "react";
+import { Constructor, Driver } from "./types";
+
+const baseURL = "https://api.jolpi.ca/ergast/f1"
 
 export async function getDriverList() {
-	var response = await fetch("https://ergast.com/api/f1/current/driverStandings")
-	var text = await response.text()
-	var xml = new window.DOMParser().parseFromString(text, "text/xml")
-	var tmpDrivers: Driver[] = [];
-	$(xml).find("DriverStanding").each((_, driver) => {
-		var driverInfo = $(driver).find("Driver")
-		var driverElement = $(driver)
-		tmpDrivers.push(new Driver(driverInfo.find("GivenName").text() + " " + driverInfo.find("FamilyName").text(), parseInt(driverElement.attr("points") ?? "0")))
-	})
-	return (tmpDrivers);
+	var response = await fetch(`${baseURL}/current/driverStandings/`)
+	var data = (await response.json()).MRData.StandingsTable.StandingsLists[0].DriverStandings as unknown
+	var drivers = (data as any).map((driver: any) => new Driver(driver.Driver.givenName + " " + driver.Driver.familyName, parseInt(driver.points ?? "0")))
+	console.log(drivers)
+	return (drivers);
+}
+
+export const useGetDriverList = () => {
+	const [driverList, setDriverList] = useState<Driver[]>([]);
+	useEffect(() => {
+		const fetchData = async () => {
+			setDriverList(await getDriverList());
+		}
+		fetchData();
+	}, []);
+	return driverList;
 }
 
 export async function getConstructorList() {
-	var response = await fetch("https://ergast.com/api/f1/current/constructorStandings")
-	var text = await response.text();
-	var xml = new window.DOMParser().parseFromString(text, "text/xml")
-	var tmpConstructors: Constructor[] = [];
-	$(xml).find("ConstructorStanding").each((index, element) => {
-		tmpConstructors.push(new Constructor($(element).find("Name").text(), parseInt($(element).attr("points") ?? "0")));
-	});
-	return (tmpConstructors);
+	var response = await fetch(`${baseURL}/current/constructorStandings/`)
+	var data = (await response.json()).MRData.StandingsTable.StandingsLists[0].ConstructorStandings as unknown
+	var constructors = (data as any).map((constructor: any) => new Constructor(constructor.Constructor.name, parseInt(constructor.points ?? "0")))
+	console.log(constructors)
+	return (constructors);
+}
+
+export const useGetConstructorList = () => {
+	const [constructorList, setConstructorList] = useState<Constructor[]>([]);
+	useEffect(() => {
+		const fetchData = async () => {
+			setConstructorList(await getConstructorList());
+		}
+		fetchData();
+	}, []);
+	return constructorList;
 }
 
 export async function getMostRecentRound() {
-	var response = await fetch("https://ergast.com/api/f1/current/last/results")
-	var text = await response.text();
-	var xml = new window.DOMParser().parseFromString(text, "text/xml")
-	return $(xml).find("Race")
+	var response = await fetch(`${baseURL}/current/last/results/`)
+	var data = (await response.json()).MRData.RaceTable.Races[0]
+	const race = {...data, round: parseInt(data.round)} as Race
+	console.log(race)
+	return race
+}
+
+export const useGetMostRecentRound = () => {
+	const [mostRecentRound, setMostRecentRound] = useState<Race>();
+	useEffect(() => {
+		const fetchData = async () => {
+			setMostRecentRound(await getMostRecentRound());
+		}
+		fetchData();
+	}, []);
+	return mostRecentRound;
+}
+
+export type Race = {
+	round: number,
+	name: string,
+	Sprint: object,
+	raceName: string
 }
 
 export async function getSchedule() {
-	var response = await fetch("https://ergast.com/api/f1/current")
-	var text = await response.text()
-	var xml = new window.DOMParser().parseFromString(text, "text/xml")
-	return xml
+	var response = await fetch(`${baseURL}/current/`)
+	var data = (await response.json()).MRData.RaceTable.Races as Race[]
+	console.log(data)
+	return data
+}
+
+export const useGetSchedule = () => {
+	const [schedule, setSchedule] = useState<Race[]>();
+	useEffect(() => {
+		const fetchData = async () => {
+			setSchedule(await getSchedule());
+		}
+		fetchData();
+	}, []);
+	return schedule;
 }
