@@ -41,23 +41,21 @@ export const useGetConstructorList = () => {
 	return constructorList;
 }
 
-export async function getMostRecentRound() {
+export async function getMostRecentRoundNumber() {
 	var response = await fetch(`${baseURL}/current/last/results/`)
-	var data = (await response.json()).MRData.RaceTable.Races[0]
-	const race = {...data, round: parseInt(data.round)} as Race
-	console.log(race)
-	return race
+	var data = parseInt((await response.json()).MRData.RaceTable.round)
+	return data
 }
 
-export const useGetMostRecentRound = () => {
-	const [mostRecentRound, setMostRecentRound] = useState<Race>();
+export const useGetMostRecentRoundNumber = () => {
+	const [mostRecentRoundNumber, setMostRecentRoundNumber] = useState<number>();
 	useEffect(() => {
 		const fetchData = async () => {
-			setMostRecentRound(await getMostRecentRound());
+			setMostRecentRoundNumber(await getMostRecentRoundNumber());
 		}
 		fetchData();
 	}, []);
-	return mostRecentRound;
+	return mostRecentRoundNumber;
 }
 
 export type Race = {
