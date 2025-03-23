@@ -42,8 +42,8 @@ export const useGetConstructorList = () => {
 }
 
 export async function getMostRecentRoundNumber() {
-	var response = await fetch(`${baseURL}/current/last/results/`)
-	var data = parseInt((await response.json()).MRData.RaceTable.round)
+	var response = await fetch(`${baseURL}/current/driverStandings/`)
+	var data = parseInt((await response.json()).MRData.StandingsTable.round)
 	return data
 }
 
