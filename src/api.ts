@@ -1,84 +1,129 @@
-import { useEffect, useState } from "react";
-import { Constructor, Driver } from "./types";
+import { useEffect, useState } from 'react';
 
-const baseURL = "https://api.jolpi.ca/ergast/f1"
+import { Constructor, Driver } from './types';
+
+const baseURL = 'https://api.jolpi.ca/ergast/f1';
 
 export async function getDriverList() {
-	var response = await fetch(`${baseURL}/current/driverStandings/`)
-	var data = (await response.json()).MRData.StandingsTable.StandingsLists[0].DriverStandings as unknown
-	var drivers = (data as any).map((driver: any) => new Driver(driver.Driver.givenName + " " + driver.Driver.familyName, parseInt(driver.points ?? "0")))
-	console.log(drivers)
-	return (drivers);
+  const response = await fetch(`${baseURL}/current/driverStandings/`);
+  const data = (
+    (await response.json()) as {
+      MRData: {
+        StandingsTable: {
+          StandingsLists: {
+            DriverStandings: {
+              Driver: { givenName: string; familyName: string };
+              points: string | undefined;
+            }[];
+          }[];
+        };
+      };
+    }
+  ).MRData.StandingsTable.StandingsLists[0].DriverStandings;
+  const drivers = data.map(
+    (driver) =>
+      new Driver(
+        driver.Driver.givenName + ' ' + driver.Driver.familyName,
+        parseInt(driver.points ?? '0', 10)
+      )
+  );
+  return drivers;
 }
 
 export const useGetDriverList = () => {
-	const [driverList, setDriverList] = useState<Driver[]>([]);
-	useEffect(() => {
-		const fetchData = async () => {
-			setDriverList(await getDriverList());
-		}
-		fetchData();
-	}, []);
-	return driverList;
-}
+  const [driverList, setDriverList] = useState<Driver[]>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      setDriverList(await getDriverList());
+    };
+    void fetchData();
+  }, []);
+  return driverList;
+};
 
 export async function getConstructorList() {
-	var response = await fetch(`${baseURL}/current/constructorStandings/`)
-	var data = (await response.json()).MRData.StandingsTable.StandingsLists[0].ConstructorStandings as unknown
-	var constructors = (data as any).map((constructor: any) => new Constructor(constructor.Constructor.name, parseInt(constructor.points ?? "0")))
-	console.log(constructors)
-	return (constructors);
+  const response = await fetch(`${baseURL}/current/constructorStandings/`);
+  const data = (
+    (await response.json()) as {
+      MRData: {
+        StandingsTable: {
+          StandingsLists: {
+            ConstructorStandings: {
+              Constructor: { name: string };
+              points: string | undefined;
+            }[];
+          }[];
+        };
+      };
+    }
+  ).MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
+  const constructors = data.map(
+    (constructor) =>
+      new Constructor(
+        constructor.Constructor.name,
+        parseInt(constructor.points ?? '0', 10)
+      )
+  );
+  return constructors;
 }
 
 export const useGetConstructorList = () => {
-	const [constructorList, setConstructorList] = useState<Constructor[]>([]);
-	useEffect(() => {
-		const fetchData = async () => {
-			setConstructorList(await getConstructorList());
-		}
-		fetchData();
-	}, []);
-	return constructorList;
-}
+  const [constructorList, setConstructorList] = useState<Constructor[]>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      setConstructorList(await getConstructorList());
+    };
+    void fetchData();
+  }, []);
+  return constructorList;
+};
 
 export async function getMostRecentRoundNumber() {
-	var response = await fetch(`${baseURL}/current/driverStandings/`)
-	var data = parseInt((await response.json()).MRData.StandingsTable.round)
-	return data
+  const response = await fetch(`${baseURL}/current/driverStandings/`);
+  const data = parseInt(
+    (
+      (await response.json()) as {
+        MRData: { StandingsTable: { round: string } };
+      }
+    ).MRData.StandingsTable.round,
+    10
+  );
+  return data;
 }
 
 export const useGetMostRecentRoundNumber = () => {
-	const [mostRecentRoundNumber, setMostRecentRoundNumber] = useState<number>();
-	useEffect(() => {
-		const fetchData = async () => {
-			setMostRecentRoundNumber(await getMostRecentRoundNumber());
-		}
-		fetchData();
-	}, []);
-	return mostRecentRoundNumber;
-}
+  const [mostRecentRoundNumber, setMostRecentRoundNumber] = useState<number>();
+  useEffect(() => {
+    const fetchData = async () => {
+      setMostRecentRoundNumber(await getMostRecentRoundNumber());
+    };
+    void fetchData();
+  }, []);
+  return mostRecentRoundNumber;
+};
 
 export type Race = {
-	round: number,
-	name: string,
-	Sprint: object,
-	raceName: string
-}
+  round: number;
+  name: string;
+  Sprint: object | undefined;
+  raceName: string;
+};
 
 export async function getSchedule() {
-	var response = await fetch(`${baseURL}/current/`)
-	var data = (await response.json()).MRData.RaceTable.Races as Race[]
-	console.log(data)
-	return data
+  const response = await fetch(`${baseURL}/current/`);
+  const data = (
+    (await response.json()) as { MRData: { RaceTable: { Races: Race[] } } }
+  ).MRData.RaceTable.Races;
+  return data;
 }
 
 export const useGetSchedule = () => {
-	const [schedule, setSchedule] = useState<Race[]>();
-	useEffect(() => {
-		const fetchData = async () => {
-			setSchedule(await getSchedule());
-		}
-		fetchData();
-	}, []);
-	return schedule;
-}
+  const [schedule, setSchedule] = useState<Race[]>();
+  useEffect(() => {
+    const fetchData = async () => {
+      setSchedule(await getSchedule());
+    };
+    void fetchData();
+  }, []);
+  return schedule;
+};

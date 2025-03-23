@@ -1,0 +1,74 @@
+name: Build, Test, and Deploy
+
+on:
+  push:
+    branches:
+      - '*'
+
+  release:
+    types: [published]
+
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    env:
+      VITE_SPOTIFY_CLIENT_ID: ${{ secrets.VITE_SPOTIFY_CLIENT_ID }}
+      VITE_SPOTIFY_CLIENT_SECRET: ${{ secrets.VITE_SPOTIFY_CLIENT_SECRET }}
+      VITE_SPOTIFY_REFRESH_TOKEN: ${{ secrets.VITE_SPOTIFY_REFRESH_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Build
+        run: yarn build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run ESLint
+        run: yarn lint
+      
+      - name: Type Check
+        run: yarn typecheck
+
+  deploy:
+    if: github.event_name == 'release'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
