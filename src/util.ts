@@ -70,10 +70,10 @@ export function calculateWinningAbility(scorerList: Scorer[], pointsRemaining: n
 	return scorerList
 }
 
-const constructorMaxPoints = [44, 27, 18, 10, 3]
+const constructorMaxPoints = [43, 27, 18, 10, 3]
 const constructorMaxSprintPoints = [15, 11, 7, 3]
 
-const driverMaxPoints = [26, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+const driverMaxPoints = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
 const driverMaxSprintPoints = [8, 7, 6, 5, 4, 3, 2, 1]
 
 function highestPossiblePosition(scorer: Scorer, scorerList: Scorer[], racesLeft: number, sprintsLeft: number) {
